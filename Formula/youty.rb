@@ -11,37 +11,55 @@
 class Youty < Formula
   desc "Save YouTube, Instagram, and TikTok videos to a local AI-readable knowledge base"
   homepage "https://github.com/legetdev/youty"
-  url "https://github.com/legetdev/youty/archive/refs/tags/v1.0.0.tar.gz"
-  sha256 "75e78ca0e99a9b82e9a44089b25ca39004fd5b490dbf2c182aaaf8fb08d7f9fa"
+  url "https://github.com/legetdev/youty/archive/refs/tags/v1.1.0.tar.gz"
+  sha256 "90695cfbadc42ed0aeb3f0e456b5534379a8819b01cbe23daebfffed43437471"
   license "MIT"
   head "https://github.com/legetdev/youty.git", branch: "main"
+
+  # Bottles (instant binary install) are built + verified on a macOS 26 runner by
+  # .github/workflows/bottle.yml, which injects a `bottle do … end` block here with
+  # the real per-arch sha256s. Until a matching bottle exists, brew transparently
+  # falls back to the from-source build below — so this formula always installs.
 
   # On-device Core ML model weights (EmbeddingGemma + SigLIP). These live
   # outside git — too large for the repo — and ship as a release asset, so the
   # source tarball above doesn't contain them. Fetched here and laid into
   # Vendor/ before the build. Bump url + sha256 in lockstep with `version`.
   resource "models" do
-    url "https://github.com/legetdev/youty/releases/download/v1.0.0/youty-models-1.0.0.tar.gz"
-    sha256 "c3139d78af916c3a77ab57986b9729b26d243a1544b2555011b1d59c2560b6d7"
+    url "https://github.com/legetdev/youty/releases/download/v1.1.0/youty-models-1.1.0.tar.gz"
+    sha256 "56e9da609720b5a598bb74d678bc33a41ba563b6742c6dee120e8e5236ab6a96"
   end
 
   # macOS 26 Tahoe is required: the SpeechAnalyzer + SpeechTranscriber
   # APIs the transcript pipeline depends on shipped in that release.
   depends_on xcode: ["26.0", :build]
   depends_on macos: :tahoe
+  # Generates the Sparkle-free, CLI-only Xcode project (project-cli.yml) at build
+  # time so xcodebuild never evaluates the app's Sparkle SPM manifest, which
+  # fails inside Homebrew's build sandbox.
+  depends_on "xcodegen" => :build
 
   def install
     # The model weights aren't in the git source tarball (externalized to keep
     # the repo lean). Merge the release-asset tarball's Vendor/ tree into the
-    # source so xcodebuild finds the .mlpackage build inputs.
+    # source so xcodebuild finds the .mlpackage build inputs. Homebrew strips the
+    # asset's single top-level "Vendor/" dir on stage, so the CWD here holds its
+    # contents (embeddinggemma/, siglip/) — merge each into the source's Vendor/,
+    # which already carries the .mlpackage Manifests + FFmpeg statics from git.
     resource("models").stage do
-      cp_r "Vendor/.", buildpath/"Vendor"
+      Dir["*"].each do |sub|
+        dest = buildpath/"Vendor"/sub
+        dest.mkpath
+        cp_r "#{sub}/.", dest
+      end
     end
 
-    # FFmpeg statics live under Vendor/ffmpeg/ — built once via
-    # Scripts/build-ffmpeg.sh, committed into the repo so end users
-    # never need to install or build FFmpeg themselves.
-    xcodebuild "-project", "youty.xcodeproj",
+    # Generate the Sparkle-free CLI project (no SPM packages -> no SwiftPM
+    # manifest sandbox under brew) and build it. FFmpeg statics live under
+    # Vendor/ffmpeg/ — built once via Scripts/build-ffmpeg.sh, committed into the
+    # repo so end users never need to install or build FFmpeg themselves.
+    system "xcodegen", "generate", "--spec", "project-cli.yml"
+    xcodebuild "-project", "youty-cli.xcodeproj",
                "-scheme", "youty-cli",
                "-configuration", "Release",
                "-derivedDataPath", "build",
