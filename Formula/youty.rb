@@ -11,15 +11,10 @@
 class Youty < Formula
   desc "Save YouTube, Instagram, and TikTok videos to a local AI-readable knowledge base"
   homepage "https://github.com/legetdev/youty"
-  url "https://github.com/legetdev/youty/archive/refs/tags/v1.3.0.tar.gz"
-  sha256 "2a292fc6c7486ca134b26c9b0d3207ba3cb1c1b9958a5e0d6581fe7d7d2145bf"
+  url "https://github.com/legetdev/youty/archive/refs/tags/v1.3.1.tar.gz"
+  sha256 "4d873525962ac590908d7ac2be0938fa53624dc35afbdb96b3ca93aeba72f4d4"
   license "MIT"
   head "https://github.com/legetdev/youty.git", branch: "main"
-
-  bottle do
-    root_url "https://github.com/legetdev/youty/releases/download/v1.3.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "2a7090a87269572d19edc4ff4c9e965993a3812f2a33686b6f4af6e36f105b5c"
-  end
 
   # Bottles (instant binary install) are built + verified on a macOS 26 runner by
   # .github/workflows/bottle.yml, which injects a `bottle do … end` block here with
@@ -101,8 +96,9 @@ class Youty < Formula
         https://youtyapp.vercel.app
 
       The MCP server (for Claude Desktop / Cursor / any MCP client) is
-      a separate Python package:
-        uv tool install youty-mcp
+      a separate Python package — wire it as uvx youty-mcp@latest so it
+      always loads the newest version (no manual upgrade):
+        claude mcp add youty -- uvx youty-mcp@latest
 
       Quick start:
         youty save https://www.youtube.com/watch?v=...
