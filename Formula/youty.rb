@@ -16,6 +16,11 @@ class Youty < Formula
   license "MIT"
   head "https://github.com/legetdev/youty.git", branch: "main"
 
+  bottle do
+    root_url "https://github.com/legetdev/youty/releases/download/v1.2.0"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "87c6c2d3ebf859d9f8f281cfe7430374f6d5d8f38ee898deff59da5dfe93bbad"
+  end
+
   # Bottles (instant binary install) are built + verified on a macOS 26 runner by
   # .github/workflows/bottle.yml, which injects a `bottle do … end` block here with
   # the real per-arch sha256s. Until a matching bottle exists, brew transparently
