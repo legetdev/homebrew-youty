@@ -4,22 +4,17 @@
 # Homebrew formula for the youty CLI.
 #
 # Canonical copy lives in the tap repo at legetdev/homebrew-youty/Formula/youty.rb.
-# On each release, bump `url` to the new tag's source tarball and set `sha256`
-# to `curl -sL <url> | shasum -a 256`.
+# Scripts/release.sh synchronizes the source checksum and verified bottle.
 
 # Build + install the youty CLI from the tagged GitHub source release.
 class Youty < Formula
   desc "Save YouTube, Instagram, and TikTok videos to a local AI-readable knowledge base"
   homepage "https://github.com/legetdev/youty"
-  url "https://github.com/legetdev/youty/archive/refs/tags/v1.4.8.tar.gz"
-  sha256 "2dbe8f9e9adc1246d5a5d3b3122481de8b782047a8f26c7e965ad1243297f385"
+  url "https://github.com/legetdev/youty/archive/refs/tags/v1.4.9.tar.gz"
+  sha256 "898b5c4f1ab50985cb907384cc643f6bda21cdcdab22a8afefe3bbf3c4841a6b"
   license "MIT"
   head "https://github.com/legetdev/youty.git", branch: "main"
 
-  bottle do
-    root_url "https://github.com/legetdev/youty/releases/download/v1.4.8"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "d0d2047c91ec0956646401f18b3c82cdc3ad63add8b305f8059dbc4994df94d1"
-  end
 
   # Bottles (instant binary install) are built + verified on a macOS 26 runner by
   # .github/workflows/bottle.yml, which injects a `bottle do … end` block here with
@@ -29,7 +24,7 @@ class Youty < Formula
   # On-device Core ML model weights (EmbeddingGemma + SigLIP). These live
   # outside git — too large for the repo — and ship as a release asset, so the
   # source tarball above doesn't contain them. Fetched here and laid into
-  # Vendor/ before the build. Bump url + sha256 in lockstep with `version`.
+  # Vendor/ before the build. This separate pin changes only with model weights.
   resource "models" do
     url "https://github.com/legetdev/youty/releases/download/v1.1.0/youty-models-1.1.0.tar.gz"
     sha256 "56e9da609720b5a598bb74d678bc33a41ba563b6742c6dee120e8e5236ab6a96"
